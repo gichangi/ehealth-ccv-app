@@ -24,6 +24,7 @@ const exploreStore = create((set) => {
 
     return {
         orgUnit: null,
+        eventOrgUnit: null,
         tab: null,
         periodType: MONTHLY,
         dailyPeriod: getDefaultExplorePeriod(),
@@ -32,6 +33,7 @@ const exploreStore = create((set) => {
         month: getLastMonth()[1],
         vegetationIndex: NDVI,
         setOrgUnit: setIfChanged('orgUnit'),
+        setEventOrgUnit: setIfChanged('eventOrgUnit'), // Support if user has not selected orgunit in tree
         setTab: setIfChanged('tab'),
         setPeriodType: setIfChanged('periodType'),
         setDailyPeriod: setIfPeriodChanged('dailyPeriod'),

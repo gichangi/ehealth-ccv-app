@@ -1,4 +1,4 @@
-import { useDataQuery } from '@dhis2/app-runtime'
+import {useDataEngine, useDataQuery} from '@dhis2/app-runtime'
 import {
     Table,
     TableHead,
@@ -27,17 +27,20 @@ const query = {
             page,
             pageSize,
             ...(orgUnitId && { orgUnit: orgUnitId }),
-            fields: ['event', 'eventDate', 'status', 'orgUnit[id,name]','createdByUserInfo','lastUpdatedByUserInfo'],
+            fields: ['program','event', 'eventDate', 'status', 'orgUnit','orgUnitName','lastUpdatedByUserInfo','lastUpdated'],
         }),
     },
 }
 
 const ProgramEventsTable = () => {
     const { programId } = useParams()
-    const { orgUnit,setOrgUnit } = exploreStore()
+    const { orgUnit,setOrgUnit,setEventOrgUnit,programsList,setProgramsList } = exploreStore()
     const [page, setPage] = useState(1)
     const [pageSize, setPageSize] = useState(10)
     const navigate = useNavigate()
+    const engine = useDataEngine()
+
+    const existingProgram = programsList.find((p) => p.programId === programId)?.program
 
     const { loading, error, data, refetch } = useDataQuery(query, {
         variables: {
@@ -49,15 +52,40 @@ const ProgramEventsTable = () => {
     })
 
     useEffect(() => {
-        if (programId) {
-            refetch({
-                page,
-                pageSize,
-                orgUnitId: orgUnit?.id ?? null,
-                programId,
-            })
+        if (!programId && orgUnit != null) {
+            setOrgUnit(null);
         }
-    }, [page, pageSize, orgUnit?.id, programId, refetch])
+
+        refetch({
+            page,
+            pageSize,
+            orgUnitId: orgUnit?.id ?? null,
+            programId,
+        });
+    }, [page, pageSize, orgUnit?.id, programId, refetch]);
+
+
+    useEffect(() => {
+        const fetchProgramIfMissing = async () => {
+            if (!existingProgram && programId) {
+                const result = await engine.query({
+                    program: {
+                        resource: `programs`,
+                        id: ({ programId }) => programId,
+                        params: {
+                            fields: ['programStages[id,name,programStageDataElements[dataElement[id,name,description,formName,optionSetValue,optionSet[id,name,options[id,name,code]]]],programStageSections[id,name,displayName,sortOrder,dataElements[id]]]']
+                        },
+                    },
+                })
+                setProgramsList({
+                    programId,
+                    program: result.program.programs,
+                })
+            }
+        }
+
+        fetchProgramIfMissing()
+    }, [programId, existingProgram, engine, setProgramsList])
 
 
     if (loading) {return <CircularLoader />}
@@ -65,6 +93,26 @@ const ProgramEventsTable = () => {
 
     const events = data?.events?.events ?? []
     const pager = data?.events?.pager
+
+    const viewEventAction = (eventId,orgUnitId,orgUnitName) => {
+        setEventOrgUnit({"displayName":orgUnitName,"id":orgUnitId})
+        navigate(`/assessments/${programId}/${eventId}`)
+    }
+
+    const formatDateString = (dateString) => {
+        if (!dateString) {return null;}
+        try {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        } catch (error) {
+            console.error("Error formatting date:", error);
+            return null;
+        }
+    };
+
 
     return (
         <>
@@ -74,45 +122,49 @@ const ProgramEventsTable = () => {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     marginBottom: '1.5rem',
-                    padding: '0 1rem',
+                    marginTop: '1.5rem',
+                    padding: '0 0.5rem',
                 }}
             >
                 <div>
-                    <h2 style={{ margin: 0 }}>Program Events</h2>
-                    <p style={{ margin: 0, color: '#555' }}>
-                        View, manage, and create new events for this program.
+                    <h2 style={{ margin: 0 }}>{existingProgram?.[0]?.programStages[0]?.name ?? "CCV-HFAT Assessments"}</h2>
+                    <p style={{ margin: 0, color: '#555', marginTop:'0.5rem' }}>
+                        {existingProgram?.[0]?.programStages[0]?.name ? `View, manage, and create assessments for ${existingProgram?.[0]?.programStages[0]?.name}.`:"View and manage assessments for all ccv-hfat programs."}
                     </p>
                 </div>
-                <Button
-                    primary
-                    onClick={() => navigate(`/assessments/${programId}/create`)}
-                >
-                    + Create New Event
-                </Button>
+                {programId && orgUnit &&(
+                    <Button
+                        primary
+                        onClick={() => navigate(`/assessments/${programId}/create`)}
+                    >
+                        + Create New Event
+                    </Button>
+                )}
             </div>
             <Table>
                 <TableHead>
                     <TableRowHead>
                         <TableCellHead>Event ID</TableCellHead>
-                        <TableCellHead>Event Date</TableCellHead>
+                        <TableCellHead>Program</TableCellHead>
+                        <TableCellHead>Assessment Date</TableCellHead>
                         <TableCellHead>Org Unit</TableCellHead>
-                        <TableCellHead>Created By</TableCellHead>
                         <TableCellHead>Last Updated By</TableCellHead>
-                        <TableCellHead>Status</TableCellHead>
+                        <TableCellHead>Date Updated</TableCellHead>
                         <TableCellHead>Actions</TableCellHead>
                     </TableRowHead>
                 </TableHead>
                 <TableBody>
                     {events.map((event) => (
                         <TableRow key={event.event}>
+
                             <TableCell>{event.event}</TableCell>
-                            <TableCell>{new Date(event.eventDate).toISOString().split('T')[0]}</TableCell>
-                            <TableCell>{orgUnit?.displayName ?? 'N/A'}</TableCell>
-                            <TableCell>{event.createdByUserInfo.username}</TableCell>
+                            <TableCell>{event.program}</TableCell>
+                            <TableCell>{formatDateString(event.eventDate)}</TableCell>
+                            <TableCell>{event.orgUnitName}</TableCell>
                             <TableCell>{event.lastUpdatedByUserInfo.username}</TableCell>
-                            <TableCell>{event.status}</TableCell>
+                            <TableCell>{formatDateString(event.lastUpdated)}</TableCell>
                             <TableCell>
-                                <Button small onClick={() =>  navigate(`/assessments/${programId}/${event.event}`)}>View</Button>{' '}
+                                <Button small onClick={() => viewEventAction(event.event, event.orgUnit,event.orgUnitName)}>View</Button>{' '}
                                 <Button small destructive onClick={() => alert(`Delete ${event.event}`)}>Delete</Button>
                             </TableCell>
                         </TableRow>

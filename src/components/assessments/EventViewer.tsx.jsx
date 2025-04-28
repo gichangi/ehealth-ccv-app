@@ -1,4 +1,5 @@
 import { useDataQuery, useDataEngine } from '@dhis2/app-runtime'
+import { useAlert } from '@dhis2/app-runtime';
 import {
     CircularLoader,
     NoticeBox,
@@ -7,7 +8,8 @@ import {
     IconChevronDown24,
     Button,
 } from '@dhis2/ui'
-import React, { useEffect, useState } from 'react'
+import { CalendarInput } from '@dhis2/ui';
+import React, { useEffect, useState,useCallback } from 'react'
 import {useNavigate, useParams} from "react-router-dom";
 import exploreStore from "../../store/exploreStore";
 
@@ -18,69 +20,48 @@ const query = {
         params: {
             fields: ['event', 'dataValues[dataElement,value]', 'program', 'programStage', 'orgUnit', 'eventDate'],
         },
-    },
-    // program: {
-    //     resource: 'programs',
-    //     id: ({ programId }) => programId,
-    //     params: {
-    //         fields: ['programStages[id,name,programStageDataElements[dataElement[id,name,formName,optionSetValue,optionSet[id,name,options[id,name,code]]]],programStageSections[id,name,displayName,sortOrder,dataElements[id]]]']
-    //     },
-    // },
+    }
 }
 
 const EventViewer = () => {
-    const { orgUnit,programsList,setProgramsList } = exploreStore()
+    const { orgUnit,programsList,eventOrgUnit } = exploreStore()
     const [values, setValues] = useState({})
     const [openSections, setOpenSections] = useState({})
     const [eventMeta, setEventMeta] = useState(null)
     const engine = useDataEngine()
     const navigate = useNavigate()
     const { programId, eventId } = useParams()
-    const [currentOrgUnit, setCurrentOrgunit] = useState(orgUnit)
+    const [currentOrgUnit, setCurrentOrgunit] = useState(orgUnit ?? eventOrgUnit )
     const [openGuideId, setOpenGuideId] = useState(null)
-
+    const [assessmentDate, setAssessmentDate] = useState(null);
+    const { show } = useAlert(
+        ({message}) => message,
+        ({options}) => (options)
+    )
     const existingProgram = programsList.find((p) => p.programId === programId)?.program
 
     const { loading, error, data } = useDataQuery(query, {
         variables: { eventId },
     })
 
-
     useEffect(() => {
-        const fetchProgramIfMissing = async () => {
-            if (!existingProgram && programId) {
-                const result = await engine.query({
-                    program: {
-                        resource: `programs`,
-                        id: ({ programId }) => programId,
-                        params: {
-                            fields: ['programStages[id,name,programStageDataElements[dataElement[id,name,description,formName,optionSetValue,optionSet[id,name,options[id,name,code]]]],programStageSections[id,name,displayName,sortOrder,dataElements[id]]]']
-                        },
-                    },
-                })
-                setProgramsList({
-                    programId,
-                    program: result.program.programs,
-                })
-            }
+        if (!currentOrgUnit) {
+            navigate(`/assessments/${programId}`);
+            return;
         }
-
-        fetchProgramIfMissing()
-    }, [programId, existingProgram, engine, setProgramsList])
-
-
-    useEffect(()=>{
-        if(orgUnit!=null && orgUnit?.id !== currentOrgUnit?.id || orgUnit==null && orgUnit?.id == null ) {
-            navigate(`/assessments/${programId}`)
+        const shouldNavigate = orgUnit && orgUnit?.id !== currentOrgUnit.id;
+        if (shouldNavigate) {
+            navigate(`/assessments/${programId}`);
         }
-    },[orgUnit])
+    }, [orgUnit, currentOrgUnit]);
+
     useEffect(() => {
         if (data?.event?.dataValues) {
-            const mapped = data.event.dataValues.reduce(
+            let mapped = data.event.dataValues.reduce(
                 (acc, dv) => ({ ...acc, [dv.dataElement]: dv.value }),
                 {}
             )
-            setValues(mapped)
+
             setEventMeta({
                 event: data.event.event,
                 program: data.event.program,
@@ -88,8 +69,26 @@ const EventViewer = () => {
                 orgUnit: data.event.orgUnit,
                 eventDate: data.event.eventDate,
             })
-        }
+            setAssessmentDate(formatDateString(data.event.eventDate))
 
+            const saveKey = `${(orgUnit ?? eventOrgUnit)?.id}-${programId}-${formatDateString(data.event.eventDate)}`;
+            const draft = localStorage.getItem(saveKey);
+
+            if (draft) {
+                try {
+                    const parsedDraft = JSON.parse(draft);
+                    if (parsedDraft && typeof parsedDraft === 'object') {
+                        console.log('Found draft, merging into event data');
+                        mapped = { ...mapped, ...parsedDraft };
+                    }
+                } catch (e) {
+                    console.error('Error parsing saved draft:', e);
+                }
+            }
+            setValues(mapped)
+
+        }
+        
         if (data?.program?.programStages?.[0]?.programStageSections) {
             const sectionMap = Object.fromEntries(
                 data.program.programStages[0].programStageSections.map((s) => [s.id, false])
@@ -115,12 +114,21 @@ const EventViewer = () => {
         setValues((prev) => ({ ...prev, [dataElementId]: value }))
     }
 
+    const saveToLocalStorage = () => {
+        const saveKey = `${currentOrgUnit.id}-${programId}-${assessmentDate}`;
+        alert(saveKey)
+        const payload = values
+        alert(JSON.stringify(payload))
+        localStorage.setItem(saveKey, JSON.stringify(payload));
+        show({message: "Data saved locally successfully!", options:{ success: true, duration: 1500 }});
+    };
+
     const handleSave = async () => {
         const payload = {
             program: eventMeta?.program ?? programId,
             programStage: eventMeta?.programStage,
-            orgUnit: eventMeta?.orgUnit?.id ?? orgUnit?.id,
-            eventDate: eventMeta?.eventDate ?? new Date().toISOString().split('T')[0],
+            orgUnit: eventMeta?.orgUnit?.id ?? currentOrgUnit?.id,
+            eventDate:  new Date(assessmentDate).toISOString().split('T')[0],
             dataValues: Object.entries(values).map(([dataElement, value]) => ({
                 dataElement,
                 value,
@@ -136,43 +144,99 @@ const EventViewer = () => {
                     type: 'update',
                     data: payload,
                 })
-                alert('Event updated successfully!')
+                show({message: "Assessment updated successfully!", options:{ success: true, duration: 1500 }});
             } else {
                 await engine.mutate({
                     resource: 'events',
                     type: 'create',
                     data: payload,
                 })
-                alert('New event created successfully!')
+                show({message: "New assessment created successfully!", options:{ success: true, duration: 1500 }});
             }
+            navigate(`/assessments/${programId}`);
         } catch (err) {
             console.error(err)
-            alert('Failed to save event')
+            show({message: "Error occurred with saving to server.", options:{ warning: true, duration: 1500 }});
         }
     }
+
+
+    const formatDateString = (dateString) => {
+        if (!dateString) {return null;}
+        try {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        } catch (error) {
+            console.error("Error formatting date:", error);
+            return null;
+        }
+    };
+
+    const today = new Date();
+    const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+
+    const handleDateChange = useCallback((date) => {
+        const selectedDateObj = new Date(date.calendarDateString);
+        const todayObj = new Date();
+        if (selectedDateObj > todayObj) {
+            show({message: "Future dates cannot be selected.", options:{  duration: 1500 }});
+            return;
+        }
+        setAssessmentDate(date.calendarDateString);
+    }, [show, today]);
 
     if (loading) {return <CircularLoader />}
     if (error) {return <NoticeBox title="Error fetching events">{error.message}</NoticeBox>}
 
+
+
     return (
-        <div style={{ fontFamily: 'Roboto, sans-serif', color: '#333' }}>
-            {JSON.stringify(values, null, 2)}
+        <div style={{ fontFamily: 'Roboto, sans-serif', color: '#333',padding: '1rem', }}>
             <div
                 style={{
                     marginBottom: '1.5rem',
                     padding: '1rem',
                     border: '1px solid #e0e0e0',
                     borderRadius: 6,
-                    backgroundColor: '#f9f9f9',
+                    backgroundColor: '#f9f9f9'
                 }}
+
             >
                 <h2 style={{ margin: '0 0 0.5rem', color: '#0075c9' }}>
-                     {programStage?.name || 'CCV-HFAT Event Assessment'}
+                    {programStage?.name || 'CCV-HFAT Event Assessment'}
                 </h2>
                 <p style={{ margin: '0 0 0.25rem', color: '#444' }}>
-                    Review and update checklist responses for <strong>Org Unit:</strong> {orgUnit?.displayName ?? 'N/A'}
+                    Review and update checklist responses for <strong>Org Unit:</strong> {currentOrgUnit?.displayName ?? 'N/A'}
                 </p>
+                <div style={{
+                    fontSize: '18px',
+                    fontWeight: 600,
+                    marginBottom: '1rem',
+                    color: '#555',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    marginTop: '1rem',
+                }}>
+                    <span>Assessment Date:</span>
+                    <CalendarInput
+                        label=""
+                        date={formatDateString(assessmentDate || eventMeta?.eventDate)}
+                        onDateSelect={handleDateChange}
+                        inputWidth='180px'
+                        format="yyyy-MM-dd"
+                        calendar="gregory"
+                        locale="en-GB"
+                        maxDate={todayFormatted}
+                        pastOnly
+                    />
+                </div>
             </div>
+
             {sections.map((section) => (
                 <div key={section.id} style={{ marginBottom: '0.2rem', border: '1px solid #ddd', borderRadius: 6 }}>
                     <div
@@ -333,7 +397,7 @@ const EventViewer = () => {
                         cursor: 'pointer',
                         width: '40%',
                     }}
-                    onClick={handleSave} // you can link this to navigation if needed
+                    onClick={saveToLocalStorage} // you can link this to navigation if needed
                 >
                     Save and Continue
                 </button>
