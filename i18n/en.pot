@@ -5,8 +5,8 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"POT-Creation-Date: 2025-04-24T10:27:54.037Z\n"
-"PO-Revision-Date: 2025-04-24T10:27:54.037Z\n"
+"POT-Creation-Date: 2025-04-29T13:59:00.258Z\n"
+"PO-Revision-Date: 2025-04-29T13:59:00.259Z\n"
 
 msgid "Check weather and climate data"
 msgstr "Check weather and climate data"
@@ -634,39 +634,6 @@ msgstr "Heat Wave Facility Assessment"
 
 msgid "Assessments"
 msgstr "Assessments"
-
-msgid ""
-"Set y-axis values for charts in the Explore data section to make it easier "
-"to compare different org units. Leave blank to calculate based on data "
-"shown."
-msgstr ""
-"Set y-axis values for charts in the Explore data section to make it easier "
-"to compare different org units. Leave blank to calculate based on data "
-"shown."
-
-msgid "Max temperature in °C"
-msgstr "Max temperature in °C"
-
-msgid "Min temperature in °C"
-msgstr "Min temperature in °C"
-
-msgid "Min temperature must be less than max temperature"
-msgstr "Min temperature must be less than max temperature"
-
-msgid "Max change in temperature in +/- °C"
-msgstr "Max change in temperature in +/- °C"
-
-msgid "Max monthly precipitation in mm"
-msgstr "Max monthly precipitation in mm"
-
-msgid "Max daily precipitation in mm"
-msgstr "Max daily precipitation in mm"
-
-msgid "Heat stress upper category"
-msgstr "Heat stress upper category"
-
-msgid "Heat stress lower category"
-msgstr "Heat stress lower category"
 
 msgid "Calculate from data"
 msgstr "Calculate from data"

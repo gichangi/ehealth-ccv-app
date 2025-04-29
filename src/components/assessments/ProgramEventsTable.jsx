@@ -112,6 +112,11 @@ const ProgramEventsTable = () => {
         }
     };
 
+    const PROGRAM_LIST = {
+        'A294977888e':'CCV-HFAT Flood Assessment',
+        'pFSueR4Uwyy':'CCV-HFAT Heatwave Assessment'
+    }
+
 
     return (
         <>
@@ -143,7 +148,7 @@ const ProgramEventsTable = () => {
             <Table>
                 <TableHead>
                     <TableRowHead>
-                        <TableCellHead>Event ID</TableCellHead>
+                        <TableCellHead>ID</TableCellHead>
                         <TableCellHead>Program</TableCellHead>
                         <TableCellHead>Assessment Date</TableCellHead>
                         <TableCellHead>Org Unit</TableCellHead>
@@ -157,7 +162,7 @@ const ProgramEventsTable = () => {
                         <TableRow key={event.event}>
 
                             <TableCell>{event.event}</TableCell>
-                            <TableCell>{event.program}</TableCell>
+                            <TableCell>{PROGRAM_LIST[event.program]}</TableCell>
                             <TableCell>{formatDateString(event.eventDate)}</TableCell>
                             <TableCell>{event.orgUnitName}</TableCell>
                             <TableCell>{event.lastUpdatedByUserInfo.username}</TableCell>

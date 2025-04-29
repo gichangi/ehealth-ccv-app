@@ -125,9 +125,7 @@ const EventViewer = () => {
 
     const saveToLocalStorage = () => {
         const saveKey = `${currentOrgUnit.id}-${programId}-${assessmentDate}`;
-        alert(saveKey)
         const payload = values
-        alert(JSON.stringify(payload))
         localStorage.setItem(saveKey, JSON.stringify(payload));
         show({message: "Data saved locally successfully!", options:{ success: true, duration: 1500 }});
     };

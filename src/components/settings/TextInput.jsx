@@ -17,7 +17,7 @@ TextInput.propTypes = {
     id: PropTypes.string,
     label: PropTypes.node,
     validationText: PropTypes.string,
-    value: PropTypes.number,
+    value: PropTypes.string,
     onChange: PropTypes.func,
 }
 
