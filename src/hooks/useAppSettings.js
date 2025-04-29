@@ -48,6 +48,7 @@ const useAppSettings = () => {
 
     const changeSetting = useCallback(
         (setting, value) => {
+            alert('mew')
             engine
                 .mutate({
                     resource,

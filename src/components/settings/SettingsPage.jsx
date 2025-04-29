@@ -1,6 +1,6 @@
 import i18n from '@dhis2/d2-i18n'
 import useAppSettings from '../../hooks/useAppSettings.js'
-import ChartSettings from './ChartSettings.jsx'
+import AssessmentToolsSettings from './AssessmentToolsSettings.jsx'
 import StartPageSelect from './StartPageSelect.jsx'
 import styles from './styles/SettingsPage.module.css'
 import TimeZoneSelect from './TimeZoneSelect.jsx'
@@ -23,8 +23,7 @@ const SettingsPage = () => {
                 )}
             </p>
             <StartPageSelect startPage={startPage} onChange={changeSetting} />
-            <TimeZoneSelect timeZone={timeZone} onChange={changeSetting} />
-            <ChartSettings />
+            <AssessmentToolsSettings/>
         </div>
     )
 }

@@ -15,7 +15,6 @@ import {
 import React, { useState, useEffect } from 'react'
 import {useNavigate, useParams} from "react-router-dom";
 import exploreStore from "../../store/exploreStore";
-import EventViewer from "./EventViewer.tsx.jsx";
 
 
 const query = {
@@ -71,7 +70,7 @@ const ProgramEventsTable = () => {
                 const result = await engine.query({
                     program: {
                         resource: `programs`,
-                        id: ({ programId }) => programId,
+                        id: programId,
                         params: {
                             fields: ['programStages[id,name,programStageDataElements[dataElement[id,name,description,formName,optionSetValue,optionSet[id,name,options[id,name,code]]]],programStageSections[id,name,displayName,sortOrder,dataElements[id]]]']
                         },
@@ -79,7 +78,7 @@ const ProgramEventsTable = () => {
                 })
                 setProgramsList({
                     programId,
-                    program: result.program.programs,
+                    program: result.program,
                 })
             }
         }
@@ -127,7 +126,7 @@ const ProgramEventsTable = () => {
                 }}
             >
                 <div>
-                    <h2 style={{ margin: 0 }}>{existingProgram?.[0]?.programStages[0]?.name ?? "CCV-HFAT Assessments"}</h2>
+                    <h2 style={{ margin: 0 }}>{existingProgram?.programStages[0]?.name ?? "CCV-HFAT Assessments"}</h2>
                     <p style={{ margin: 0, color: '#555', marginTop:'0.5rem' }}>
                         {existingProgram?.[0]?.programStages[0]?.name ? `View, manage, and create assessments for ${existingProgram?.[0]?.programStages[0]?.name}.`:"View and manage assessments for all ccv-hfat programs."}
                     </p>

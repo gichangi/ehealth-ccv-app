@@ -30,19 +30,24 @@ const EventViewer = () => {
     const [eventMeta, setEventMeta] = useState(null)
     const engine = useDataEngine()
     const navigate = useNavigate()
-    const { programId, eventId } = useParams()
+    const { programId, eventId:paramEventId } = useParams()
+    const [ eventId, setEventId] = useState(paramEventId)
     const [currentOrgUnit, setCurrentOrgunit] = useState(orgUnit ?? eventOrgUnit )
     const [openGuideId, setOpenGuideId] = useState(null)
     const [assessmentDate, setAssessmentDate] = useState(null);
+
+
     const { show } = useAlert(
         ({message}) => message,
         ({options}) => (options)
     )
     const existingProgram = programsList.find((p) => p.programId === programId)?.program
 
-    const { loading, error, data } = useDataQuery(query, {
+    const { loading, error, data,refetch } = useDataQuery(query, {
         variables: { eventId },
+
     })
+
 
     useEffect(() => {
         if (!currentOrgUnit) {
@@ -57,7 +62,7 @@ const EventViewer = () => {
 
     useEffect(() => {
         if (data?.event?.dataValues) {
-            let mapped = data.event.dataValues.reduce(
+            const mapped = data.event.dataValues.reduce(
                 (acc, dv) => ({ ...acc, [dv.dataElement]: dv.value }),
                 {}
             )
@@ -70,25 +75,10 @@ const EventViewer = () => {
                 eventDate: data.event.eventDate,
             })
             setAssessmentDate(formatDateString(data.event.eventDate))
-
-            const saveKey = `${(orgUnit ?? eventOrgUnit)?.id}-${programId}-${formatDateString(data.event.eventDate)}`;
-            const draft = localStorage.getItem(saveKey);
-
-            if (draft) {
-                try {
-                    const parsedDraft = JSON.parse(draft);
-                    if (parsedDraft && typeof parsedDraft === 'object') {
-                        console.log('Found draft, merging into event data');
-                        mapped = { ...mapped, ...parsedDraft };
-                    }
-                } catch (e) {
-                    console.error('Error parsing saved draft:', e);
-                }
-            }
-            setValues(mapped)
-
+            updateValues(mapped,formatDateString(data.event.eventDate) );
+        }else{
+            updateValues([], assessmentDate)
         }
-        
         if (data?.program?.programStages?.[0]?.programStageSections) {
             const sectionMap = Object.fromEntries(
                 data.program.programStages[0].programStageSections.map((s) => [s.id, false])
@@ -97,7 +87,26 @@ const EventViewer = () => {
         }
     }, [data])
 
-    const programStage = existingProgram?.[0]?.programStages?.[0]
+
+
+    const updateValues = (mapped, currentAssessmentDate) => {
+        const saveKey = `${(orgUnit ?? eventOrgUnit)?.id}-${programId}-${currentAssessmentDate}`;
+        const draft = localStorage.getItem(saveKey);
+        if (draft) {
+            try {
+                const parsedDraft = JSON.parse(draft);
+                if (parsedDraft && typeof parsedDraft === 'object') {
+                    console.log('Found draft, merging into event data');
+                    mapped = { ...mapped, ...parsedDraft };
+                }
+            } catch (e) {
+                console.error('Error parsing saved draft:', e);
+            }
+        }
+        setValues(mapped)
+    }
+
+    const programStage = existingProgram?.programStages?.[0]
     const sections = programStage?.programStageSections ?? []
     const elementsMap = Object.fromEntries(
         programStage?.programStageDataElements.map((psde) => [
@@ -179,7 +188,49 @@ const EventViewer = () => {
     const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
 
-    const handleDateChange = useCallback((date) => {
+    const checkEventExistence =  async (selectedDate) => {
+        try {
+            const selected = new Date(selectedDate);
+            selected.setDate(selected.getDate() + 1);
+            const nextDay = selected.toISOString().split('T')[0]; // format to 'YYYY-MM-DD'
+
+            const result =  await engine.query({
+                events: {
+                    resource: 'events',
+                    params: {
+                        orgUnit: currentOrgUnit?.id,
+                        program: programId,
+                        startDate: selectedDate,
+                        endDate: formatDateString(nextDay),
+                        paging: false,
+                    },
+                },
+            });
+
+            const foundEvents = await result?.events?.events ?? [];
+            const ifFound = foundEvents.length > 0;
+            if(ifFound){
+                 await refetch({ eventId: foundEvents[0].event });
+            }else {
+                 await refetch();
+            }
+            return ifFound;
+        } catch (error) {
+            console.error('Error checking existing event:', error);
+            return false;
+        }
+    };
+    useEffect(() => {
+        if (!eventId && assessmentDate != null) {
+            checkEventExistence(assessmentDate).then(res => {
+                if (res) {
+                    show({ message: "An event already exists for this date. Please review before creating another.", options: { warning: true, duration: 2500 } });
+                }
+            })
+
+        }},[assessmentDate])
+
+    const handleDateChange = useCallback(async (date) => {
         const selectedDateObj = new Date(date.calendarDateString);
         const todayObj = new Date();
         if (selectedDateObj > todayObj) {
