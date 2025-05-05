@@ -1,9 +1,8 @@
 import i18n from "@dhis2/d2-i18n";
 import { CssVariables, CssReset, Menu, MenuItem } from "@dhis2/ui";
-import { Fragment, useEffect } from "react";
+import React, { useEffect, useState, useRef, Fragment } from "react";
 import { Outlet, useResolvedPath, useNavigate } from "react-router-dom";
 import useAppSettings from "../hooks/useAppSettings.js";
-import CheckOrgUnitTree from "./check/OrgUnitTree.jsx";
 import OrgUnitTree from "./explore/OrgUnitTree.jsx";
 import styles from "./styles/Root.module.css";
 
@@ -21,6 +20,10 @@ export const assessmentsList = [
         path: "/assessments/pFSueR4Uwyy",
         name: i18n.t("Heat Wave Facility Assessment"),
     },
+    {
+        path: "/assessments/E7yXlhOQYMU",
+        name: i18n.t("Drought Health Facility Assessment"),
+    },
 ];
 
 const Root = () => {
@@ -28,18 +31,42 @@ const Root = () => {
     const { pathname } = useResolvedPath();
     const navigate = useNavigate();
 
+    const [sidebarWidth, setSidebarWidth] = useState(380);
+    const isResizing = useRef(false);
+
     useEffect(() => {
         if (pathname === "/" && settings?.startPage) {
             navigate(settings.startPage);
         }
     }, [settings, pathname, navigate]);
 
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            if (!isResizing.current) return;
+            setSidebarWidth(Math.min(600, Math.max(200, e.clientX)));
+        };
+
+        const handleMouseUp = () => {
+            isResizing.current = false;
+        };
+
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseup", handleMouseUp);
+
+        return () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("mouseup", handleMouseUp);
+        };
+    }, []);
+
     return (
         <>
 
             <CssReset />
             <CssVariables spacers colors />
-            <div className={styles.container}>
+
+            <div                 className={styles.container}
+                                 style={{ "--sidebar-width": `${sidebarWidth}px` }}>
                 <div className={styles.sidebar}>
                     <Menu>
                         {appPages.map(({ path, name }) => (
@@ -86,8 +113,6 @@ const Root = () => {
                                 </>
                             )}
                         </Fragment>
-
-
                         <Fragment key={'settings-route'}>
                             <MenuItem
                                 label={'Settings'}
@@ -101,6 +126,10 @@ const Root = () => {
 
                     </Menu>
                 </div>
+                <div
+                    className={styles.resizer}
+                    onMouseDown={() => (isResizing.current = true)}
+                />
                 <main className={styles.content}>
                     <Outlet />
                 </main>

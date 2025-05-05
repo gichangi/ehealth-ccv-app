@@ -126,7 +126,6 @@ const tabRoutes = [
 ]
 
 const Routes = () => {
-    const engine = useDataEngine()
 
     const router = createHashRouter([
         {

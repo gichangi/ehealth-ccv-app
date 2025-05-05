@@ -5,8 +5,8 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"POT-Creation-Date: 2025-04-29T13:59:00.258Z\n"
-"PO-Revision-Date: 2025-04-29T13:59:00.259Z\n"
+"POT-Creation-Date: 2025-05-05T09:27:09.067Z\n"
+"PO-Revision-Date: 2025-05-05T09:27:09.067Z\n"
 
 msgid "Check weather and climate data"
 msgstr "Check weather and climate data"
@@ -631,6 +631,9 @@ msgstr "Flood Health Facility Assessment"
 
 msgid "Heat Wave Facility Assessment"
 msgstr "Heat Wave Facility Assessment"
+
+msgid "Drought Health Facility Assessment"
+msgstr "Drought Health Facility Assessment"
 
 msgid "Assessments"
 msgstr "Assessments"
