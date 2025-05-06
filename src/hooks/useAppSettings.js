@@ -3,7 +3,6 @@ import { useState, useCallback, useEffect } from 'react'
 
 const APP_NAMESPACE = 'CLIMATE_DATA'
 const SETTINGS_KEY = 'settings'
-
 const resource = `dataStore/${APP_NAMESPACE}/${SETTINGS_KEY}`
 
 const useAppSettings = () => {
@@ -12,22 +11,20 @@ const useAppSettings = () => {
     const [error, setError] = useState()
     const engine = useDataEngine()
 
-    // Fetch app settings / create namspace/key if missing
     const getSettings = useCallback(() => {
         setLoading(true)
         engine
             .query({ dataStore: { resource: 'dataStore' } })
             .then(({ dataStore }) => {
                 if (dataStore.includes(APP_NAMESPACE)) {
-                    // Fetch settings if namespace/keys exists in data store
                     engine
                         .query({ settings: { resource } })
                         .then(({ settings }) => {
                             setSettings(settings)
                             setLoading(false)
                         })
+                        .catch(setError)
                 } else {
-                    // Create namespace/keys if missing in data store
                     engine
                         .mutate({
                             resource,
@@ -36,6 +33,7 @@ const useAppSettings = () => {
                         })
                         .then((response) => {
                             if (response.httpStatusCode === 201) {
+                                setSettings({})
                                 setLoading(false)
                             } else {
                                 setError(response)
@@ -44,34 +42,33 @@ const useAppSettings = () => {
                         .catch(setError)
                 }
             })
+            .catch(setError)
     }, [engine])
 
     const changeSetting = useCallback(
-        (setting, value) => {
+        (key, value) => {
+            const updatedSettings = { ...settings, [key]: value }
             engine
                 .mutate({
                     resource,
                     type: 'update',
-                    data: {
-                        ...settings,
-                        [setting]: value,
-                    },
+                    data: updatedSettings,
                 })
                 .then((response) => {
                     if (response.httpStatusCode === 200) {
-                        getSettings()
+                        setSettings(updatedSettings)
                     } else {
                         setError(response)
                     }
                 })
                 .catch(setError)
         },
-        [engine, settings, getSettings]
+        [engine, settings]
     )
 
     useEffect(() => {
         getSettings()
-    }, [engine, getSettings])
+    }, [getSettings])
 
     return { settings, loading, error, changeSetting }
 }

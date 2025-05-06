@@ -1,53 +1,46 @@
-import { useEffect } from 'react';
 import { Card } from '@dhis2/ui';
 import styles from '../styles/AboutPage.module.css';
+import React, { useState, useEffect } from 'react';
+import { CircularLoader, CenteredContent } from '@dhis2/ui';
+import useAppSettings from '../../hooks/useAppSettings';
 
 const DashboardPage = () => {
-    useEffect(() => {
-        const divElement = document.getElementById('viz1746534488626');
-        const vizElement = divElement.getElementsByTagName('object')[0];
-        vizElement.style.width = '100%';
-        vizElement.style.height = '600px';
+    const { settings, loading } = useAppSettings();
+    const [url, setUrl] = useState('');
 
-        const scriptElement = document.createElement('script');
-        scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';
-        vizElement.parentNode.insertBefore(scriptElement, vizElement);
-    }, []);
+    // Check if settings is available and update the URL accordingly
+    useEffect(() => {
+        if (settings?.ccvHFATDashboard) {
+            let tableauUrl = settings.ccvHFATDashboard;
+            if (!tableauUrl.includes('?:embed=y')) {
+                tableauUrl += '?:embed=y&:display_count=yes';
+            }
+            setUrl(tableauUrl);
+        }
+    }, [settings]); // Ensure that effect runs whenever settings change
+
+    if (loading) {
+        return (
+            <CenteredContent>
+                <CircularLoader large />
+            </CenteredContent>
+        );
+    }
 
     return (
-        <div className={styles.container}>
-            <Card>
-                <div
-                    className="tableauPlaceholder"
-                    id="viz1746534488626"
-                    style={{ position: 'relative', marginTop: '20px' }}
-                >
-                    <noscript>
-                        <a href='#'>
-                            <img
-                                alt='Summary'
-                                src='https://public.tableau.com/static/images/Su/SuperStoreSuperInteractivity/Summary/1_rss.png'
-                                style={{ border: 'none' }}
-                            />
-                        </a>
-                    </noscript>
-                    <object className='tableauViz' style={{ display: 'none' }}>
-                        <param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' />
-                        <param name='embed_code_version' value='3' />
-                        <param name='site_root' value='' />
-                        <param name='name' value='SuperStoreSuperInteractivity/Summary' />
-                        <param name='tabs' value='no' />
-                        <param name='toolbar' value='yes' />
-                        <param name='static_image' value='https://public.tableau.com/static/images/Su/SuperStoreSuperInteractivity/Summary/1.png' />
-                        <param name='animate_transition' value='yes' />
-                        <param name='display_static_image' value='yes' />
-                        <param name='display_spinner' value='yes' />
-                        <param name='display_overlay' value='yes' />
-                        <param name='display_count' value='yes' />
-                        <param name='language' value='en-US' />
-                    </object>
-                </div>
-            </Card>
+        <div style={{ height: '90vh', width: '100%' }}>
+            {url ? (
+                <iframe
+                    src={url}
+                    width="100%"
+                    height="100%"
+                    title="Dashboard"
+                    frameBorder="0"
+                    allowFullScreen
+                />
+            ) : (
+                <p style={{ textAlign: 'center' }}>No dashboard URL provided.</p>
+            )}
         </div>
     );
 };

@@ -12,6 +12,7 @@ const AssessmentToolsSettings = () => {
         ccvHFATFlood='A294977888e',
         ccvHFATHeatwave ='pFSueR4Uwyy',
         ccvHFATDrought,
+        ccvHFATDashboard,
 
     } = settings
 
@@ -38,6 +39,14 @@ const AssessmentToolsSettings = () => {
                 id="ccvHFATDrought"
                 label='CCV-HFAT Adaptation Drought'
                 value={ccvHFATDrought}
+                onChange={changeSetting}
+                inputWidth="100px"
+            />
+
+            <TextInput
+                id="ccvHFATDashboard"
+                label='CCV-HFAT Dashboard URL'
+                value={ccvHFATDashboard}
                 onChange={changeSetting}
                 inputWidth="100px"
             />
