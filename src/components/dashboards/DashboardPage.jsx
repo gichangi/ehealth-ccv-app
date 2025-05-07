@@ -6,15 +6,15 @@ import useAppSettings from '../../hooks/useAppSettings';
 
 const DashboardPage = () => {
     const { settings, loading } = useAppSettings();
-    const [url, setUrl] = useState('');
+    const [url, setUrl] = useState('https://public.tableau.com/views/Makeovermondayweek46-AidWorkerSecurityIncidents/SecurityIncidents?:language=en-GB&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link');
 
     // Check if settings is available and update the URL accordingly
     useEffect(() => {
         if (settings?.ccvHFATDashboard) {
-            let tableauUrl = settings.ccvHFATDashboard;
-            if (!tableauUrl.includes('?:embed=y')) {
-                tableauUrl += '?:embed=y&:display_count=yes';
-            }
+            let tableauUrl = '';
+            // if (!tableauUrl.includes('?:embed=y')) {
+            //     tableauUrl += '?:embed=y&:display_count=yes';
+            // }
             setUrl(tableauUrl);
         }
     }, [settings]); // Ensure that effect runs whenever settings change
@@ -29,18 +29,14 @@ const DashboardPage = () => {
 
     return (
         <div style={{ height: '90vh', width: '100%' }}>
-            {url ? (
                 <iframe
-                    src={url}
+                    src="https://public.tableau.com/views/CrumbsofCrumble/Crumble?:language=en-GB&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link"
                     width="100%"
                     height="100%"
                     title="Dashboard"
                     frameBorder="0"
                     allowFullScreen
                 />
-            ) : (
-                <p style={{ textAlign: 'center' }}>No dashboard URL provided.</p>
-            )}
         </div>
     );
 };
