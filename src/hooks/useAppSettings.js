@@ -1,8 +1,8 @@
 import { useDataEngine } from '@dhis2/app-runtime'
 import { useState, useCallback, useEffect } from 'react'
 
-const APP_NAMESPACE = 'CLIMATE_DATA'
-const SETTINGS_KEY = 'settings'
+const APP_NAMESPACE = 'ccv-dhis2-app'
+const SETTINGS_KEY = 'ccv-dhis2-app'
 const resource = `dataStore/${APP_NAMESPACE}/${SETTINGS_KEY}`
 
 const useAppSettings = () => {

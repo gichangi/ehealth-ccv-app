@@ -1,44 +1,45 @@
-import { Card } from '@dhis2/ui';
-import styles from '../styles/AboutPage.module.css';
-import React, { useState, useEffect } from 'react';
-import { CircularLoader, CenteredContent } from '@dhis2/ui';
-import useAppSettings from '../../hooks/useAppSettings';
+import React, { useEffect, useState } from 'react'
+import { TableauViz } from '@tableau/embedding-api-react'
+import { Card } from '@dhis2/ui'
+import useAppSettings from '../../hooks/useAppSettings'
+import styles from '../styles/AboutPage.module.css'
 
 const DashboardPage = () => {
-    const { settings, loading } = useAppSettings();
-    const [url, setUrl] = useState('https://public.tableau.com/views/Makeovermondayweek46-AidWorkerSecurityIncidents/SecurityIncidents?:language=en-GB&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link');
+    const { settings, loading, error } = useAppSettings()
+    const [vizUrl, setVizUrl] = useState('')
 
-    // Check if settings is available and update the URL accordingly
+    // On settings change, update vizUrl if the URL key exists
     useEffect(() => {
-        if (settings?.ccvHFATDashboard) {
-            let tableauUrl = '';
-            // if (!tableauUrl.includes('?:embed=y')) {
-            //     tableauUrl += '?:embed=y&:display_count=yes';
-            // }
-            setUrl(tableauUrl);
+        if (settings && settings.ccvHFATDashboard) {
+            setVizUrl(settings.ccvHFATDashboard)
         }
-    }, [settings]); // Ensure that effect runs whenever settings change
+    }, [settings])
 
-    if (loading) {
-        return (
-            <CenteredContent>
-                <CircularLoader large />
-            </CenteredContent>
-        );
-    }
+    if (loading) return <div>Loading...</div>
+    if (error) return <div>Error loading dashboard: {error.message}</div>
 
     return (
-        <div style={{ height: '90vh', width: '100%' }}>
-                <iframe
-                    src="https://public.tableau.com/views/CrumbsofCrumble/Crumble?:language=en-GB&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link"
-                    width="100%"
-                    height="100%"
-                    title="Dashboard"
-                    frameBorder="0"
-                    allowFullScreen
-                />
+        <div className={styles.container}>
+            <Card>
+                {vizUrl ? (
+                    <div style={{ width: '100%', height: '700px' }}>
+                        <TableauViz
+                            src={vizUrl}
+                            toolbar="hidden"
+                            hide-tabs
+                            width="100%"
+                            height="700px"
+                            onFirstInteractive={() => {
+                                console.log('Tableau viz loaded')
+                            }}
+                        />
+                    </div>
+                ) : (
+                    <p>No Tableau dashboard URL configured.</p>
+                )}
+            </Card>
         </div>
-    );
-};
+    )
+}
 
-export default DashboardPage;
+export default DashboardPage

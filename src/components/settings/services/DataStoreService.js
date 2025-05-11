@@ -1,7 +1,7 @@
 // src/services/dataStoreService.js
 import { getInstance } from '@dhis2/app-runtime'
 
-const namespace = 'ehealth-ccv-app'
+const namespace = 'ccv-dhis2-app'
 
 const api = getInstance()
 
