@@ -11,7 +11,6 @@ const HomePage = () => {
             margin: '0.5rem auto',
             padding: '0 0.5rem',
             overflow: 'hidden' ,
-            backgroundColor: 'red',       
          },
         cardContent: {
             padding: '0.5rem',
