@@ -1,9 +1,11 @@
 import useAppSettings from '../../hooks/useAppSettings.js'
 import TextInput from "./TextInput";
 import useDataStore from '../../hooks/useDataStore.js';
+import { useNavigate } from 'react-router-dom'
 
 const AssessmentToolsSettings = () => {
     const { settings, changeSetting } = useAppSettings()
+    const navigate = useNavigate()
 
     if (!settings) {
         return null
@@ -20,6 +22,7 @@ const AssessmentToolsSettings = () => {
     return (
         <>
             <h2>Assessment Tools Configuration</h2>
+
             <TextInput
                 id="ccvHFATFlood"
                 label='CCV-HFAT Flood Assessment'

@@ -21,6 +21,7 @@ import TemperatureMonthly from './explore/temperature/TemperatureMonthly.jsx'
 import Vegetation from './explore/vegetation/Vegetation.jsx'
 import Root from './Root.jsx'
 import SettingsPage from './settings/SettingsPage.jsx'
+import Home from './Home/HomePage.jsx';
 
 const monthlyPath = 'monthly/:startTime/:endTime/:referencePeriodId'
 const dailyPath = 'daily/:startTime/:endTime'
@@ -135,7 +136,7 @@ const Routes = () => {
             children: [
                 {
                     path: '/',
-                    element: <AboutPage />,
+                    element: <Home />,
                 },
                 {
                     path: 'dashboards',
