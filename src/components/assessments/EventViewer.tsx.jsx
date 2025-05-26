@@ -12,6 +12,7 @@ import { CalendarInput } from '@dhis2/ui';
 import React, { useEffect, useState,useCallback } from 'react'
 import {useNavigate, useParams} from "react-router-dom";
 import exploreStore from "../../store/exploreStore";
+import DatePicker from "../shared/DatePicker";
 
 const query = {
     event: {
@@ -35,7 +36,7 @@ const EventViewer = () => {
     const [currentOrgUnit, setCurrentOrgunit] = useState(orgUnit ?? eventOrgUnit )
     const [openGuideId, setOpenGuideId] = useState(null)
     const [assessmentDate, setAssessmentDate] = useState(null);
-
+    const [userLocation, setUserLocation] = useState(null);
 
     const { show } = useAlert(
         ({message}) => message,
@@ -43,6 +44,7 @@ const EventViewer = () => {
     )
     const existingProgram = programsList.find((p) => p.programId === programId)?.program
 
+    console.log("existingProgramexistingProgramexistingProgram",existingProgram)
     const { loading, error, data,refetch } = useDataQuery(query, {
         variables: { eventId },
 
@@ -266,6 +268,8 @@ const EventViewer = () => {
         return allRequiredElementIds.every(id => values[id]);
     };
 
+    const todayString = today.toISOString().split('T')[0]
+
     return (
         <div style={{ fontFamily: 'Roboto, sans-serif', color: '#333',padding: '1rem', }}>
             <div
@@ -295,15 +299,7 @@ const EventViewer = () => {
                     marginTop: '1rem',
                 }}>
                     <span>Assessment Date:</span>
-                    <CalendarInput
-                        label=""
-                        calendar="gregory"
-                        locale="en-GB"
-                        date="2025-06-06"
-                        minDate="2023-06-01"
-                        maxDate="2023-06-30"
-                        onDateSelect={handleDateChange}
-                    />
+                    <DatePicker label="" onChange={handleDateChange} maxDate={todayString} />
                 </div>
             </div>
 
@@ -371,22 +367,58 @@ const EventViewer = () => {
 
                                         <div style={{ width: '100%' }}>
                                             {dataElement.name?.toLowerCase().includes('collection-point-geo-codes') ? (
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'row', gap: '0.75rem', width: '100%' }}>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (navigator.geolocation) {
+                                                                navigator.geolocation.getCurrentPosition(
+                                                                    (position) => {
+                                                                        const lat = position.coords.latitude.toFixed(6);
+                                                                        const lng = position.coords.longitude.toFixed(6);
+                                                                        const coords = `${lat},${lng}`;
+                                                                        handleOptionSelect(de.id, coords);
+                                                                        setUserLocation({ latitude: lat, longitude: lng });
+                                                                    },
+                                                                    (error) => {
+                                                                        show({ message: `Unable to get location: ${error.message}`, options: { warning: true } });
+                                                                    }
+                                                                );
+                                                            } else {
+                                                                show({ message: "Geolocation not supported by this browser", options: { warning: true } });
+                                                            }
+                                                        }}
+                                                        style={{
+                                                            whiteSpace: 'nowrap',
+                                                            padding: '1rem',
+                                                            backgroundColor: '#0075c9',
+                                                            color: '#fff',
+                                                            border: 'none',
+                                                            borderRadius: '6px',
+                                                            fontSize: '14px',
+                                                            cursor: 'pointer',
+                                                            height: '100%',
+                                                        }}
+                                                    >
+                                                        Location
+                                                    </button>
                                                     <input
+                                                        disabled
                                                         type="text"
                                                         placeholder="Latitude,Longitude (e.g. -1.2921,36.8219)"
                                                         value={selected || ''}
                                                         onChange={(e) => handleOptionSelect(de.id, e.target.value)}
                                                         style={{
+                                                            flex: 1,
                                                             padding: '0.75rem',
                                                             border: '1px solid #ccc',
                                                             borderRadius: '6px',
                                                             fontSize: '16px',
-                                                            width: '100%',
                                                         }}
                                                     />
-                                                    {/* Optionally validate or preview the coordinates */}
                                                 </div>
+
                                             ) : (
                                                 <div style={{ width: '100%' }}>
                                                     <select

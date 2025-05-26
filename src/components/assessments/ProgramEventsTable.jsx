@@ -1,5 +1,4 @@
 import {useDataEngine, useDataQuery} from '@dhis2/app-runtime'
-import useDataStore from '../../hooks/useDataStore';
 import {
     Table,
     TableHead,
@@ -73,7 +72,7 @@ const ProgramEventsTable = () => {
                         resource: `programs`,
                         id: programId,
                         params: {
-                            fields: ['programStages[id,name,programStageDataElements[dataElement[id,name,description,formName,optionSetValue,optionSet[id,name,options[id,name,code]]]],programStageSections[id,name,displayName,sortOrder,dataElements[id]]]']
+                            fields: ['programStages[id,name,programStageDataElements[dataElement[id,name,description,formName,optionSetValue,optionSet[id,name,options[id,name,code]]]],programStageSections[id,name,displayName,sortOrder,dataElements[id]]],organisationUnits[id]']
                         },
                     },
                 })
@@ -114,8 +113,9 @@ const ProgramEventsTable = () => {
     };
 
     const PROGRAM_LIST = {
-        'A294977888e':'CCV-HFAT Flood Assessment',
-        'pFSueR4Uwyy':'CCV-HFAT Heatwave Assessment'
+        'A294977888e':'Flood Assessment',
+        'pFSueR4Uwyy':'Heatwave Assessment',
+        'VQye4gFGUpM':'Drought Assessment'
     }
 
 
@@ -137,7 +137,7 @@ const ProgramEventsTable = () => {
                         {existingProgram?.[0]?.programStages[0]?.name ? `View, manage, and create assessments for ${existingProgram?.[0]?.programStages[0]?.name}.`:"View and manage assessments for all CHAT programs."}
                     </p>
                 </div>
-                {programId && orgUnit &&(
+                {existingProgram?.organisationUnits.length > 1 && existingProgram?.organisationUnits?.some((ou) => ou.id === orgUnit?.id) && programId && orgUnit &&(
                     <Button
                         primary
                         onClick={() => navigate(`/assessments/${programId}/create`)}
@@ -170,7 +170,7 @@ const ProgramEventsTable = () => {
                             <TableCell>{formatDateString(event.lastUpdated)}</TableCell>
                             <TableCell>
                                 <Button small onClick={() => viewEventAction(event.event, event.orgUnit,event.orgUnitName)}>View</Button>{' '}
-                                <Button small destructive onClick={() => alert(`Delete ${event.event}`)}>Delete</Button>
+                                {/*<Button small destructive onClick={() => alert(`Delete ${event.event}`)}>Delete</Button>*/}
                             </TableCell>
                         </TableRow>
                     ))}

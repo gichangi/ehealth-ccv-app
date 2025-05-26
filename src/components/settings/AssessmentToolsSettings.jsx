@@ -1,7 +1,6 @@
+import { useNavigate } from 'react-router-dom'
 import useAppSettings from '../../hooks/useAppSettings.js'
 import TextInput from "./TextInput";
-import useDataStore from '../../hooks/useDataStore.js';
-import { useNavigate } from 'react-router-dom'
 
 const AssessmentToolsSettings = () => {
     const { settings, changeSetting } = useAppSettings()
@@ -14,7 +13,7 @@ const AssessmentToolsSettings = () => {
     const {
         ccvHFATFlood='A294977888e',
         ccvHFATHeatwave ='pFSueR4Uwyy',
-        ccvHFATDrought,
+        ccvHFATDrought = 'VQye4gFGUpM',
         ccvHFATDashboard,
 
     } = settings
@@ -25,7 +24,7 @@ const AssessmentToolsSettings = () => {
 
             <TextInput
                 id="ccvHFATFlood"
-                label='CCV-HFAT Flood Assessment'
+                label='Flood Assessment'
                 value={ccvHFATFlood}
                 onChange={changeSetting}
                 inputWidth="100px"
@@ -33,7 +32,7 @@ const AssessmentToolsSettings = () => {
 
             <TextInput
                 id="ccvHFATHeatwave"
-                label='CCV-HFAT Heatwave Assessment'
+                label='Heatwave Assessment'
                 value={ccvHFATHeatwave}
                 onChange={changeSetting}
                 inputWidth="100px"
@@ -41,7 +40,7 @@ const AssessmentToolsSettings = () => {
 
             <TextInput
                 id="ccvHFATDrought"
-                label='CCV-HFAT Adaptation Drought'
+                label='Adaptation Drought Assessment'
                 value={ccvHFATDrought}
                 onChange={changeSetting}
                 inputWidth="100px"
@@ -49,7 +48,7 @@ const AssessmentToolsSettings = () => {
 
             <TextInput
                 id="ccvHFATDashboard"
-                label='CCV-HFAT Dashboard URL'
+                label='CHAT Dashboard URL'
                 value={ccvHFATDashboard}
                 onChange={changeSetting}
                 inputWidth="100px"

@@ -21,7 +21,7 @@ export const assessmentsList = [
         name: i18n.t("Heat Wave Facility Assessment"),
     },
     {
-        path: "/assessments/E7yXlhOQYMU",
+        path: "/assessments/VQye4gFGUpM",
         name: i18n.t("Drought Health Facility Assessment"),
     },
 ];

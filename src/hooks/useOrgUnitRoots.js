@@ -11,11 +11,21 @@ const ORG_UNIT_ROOTS_QUERY = {
     },
 }
 
+const query = {
+    me: {
+        resource: 'me',
+        params: {
+            fields: 'organisationUnits[id,displayName~rename(name),path]',
+        },
+    },
+}
+
 const useOrgUnitRoots = () => {
-    const { loading, error, data } = useDataQuery(ORG_UNIT_ROOTS_QUERY)
+    //const { loading, error, data } = useDataQuery(ORG_UNIT_ROOTS_QUERY)
+    const { loading, error, data } = useDataQuery(query)
 
     return {
-        roots: data?.roots?.organisationUnits,
+        roots: data?.me?.organisationUnits ?? [],
         error,
         loading,
     }
