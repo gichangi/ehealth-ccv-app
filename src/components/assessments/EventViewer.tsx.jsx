@@ -469,11 +469,31 @@ const EventViewer = () => {
                                                 }}
                                             >
                                                 <strong>Level of Preparedness Score:</strong>
-                                                <div style={{ display: 'flex', alignItems: 'center', marginTop: '0.5rem', color: '#B7B747' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', marginTop: '0.5rem', marginBottom: '1.5rem', color: '#B7B747' }}>
                                                     <span style={{ fontSize: '18px', marginRight: '10px', color:'#B7B747' }}>⚠️</span>
                                                     <span><strong>1</strong> is the lowest while <strong>5</strong> is the highest.</span>
                                                 </div>
-                                                <div  style={{  marginTop: '-1.5rem', fontSize: '14px', }} dangerouslySetInnerHTML={{ __html: dataElement.description }} />
+                                                <div style={{ marginTop: '-1rem', fontSize: '14px', color: '#333', lineHeight: '1.6' }}>
+                                                    <ol style={{ paddingLeft: '1.5rem' }}>
+                                                        {dataElement.description
+                                                            .split(/(?=\d+: )/g) // Split on "1: ", "2: ", etc.
+                                                            .filter(Boolean)
+                                                            .map((item, index) => {
+                                                                // Match: "1: No plan/regulation: Description..."
+                                                                const match = item.match(/^(\d+:\s*)([^:]+:)([\s\S]*)/)
+                                                                if (!match) {return null}
+
+                                                                const [, numberPrefix, label, rest] = match
+
+                                                                return (
+                                                                    <li key={index} >
+                                                                        <span style={{ fontWeight: 700 }}>{label}</span>{rest.trim()}
+                                                                    </li>
+                                                                )
+                                                            })}
+                                                    </ol>
+                                                </div>
+
                                             </div>)}
 
                                         </div>
