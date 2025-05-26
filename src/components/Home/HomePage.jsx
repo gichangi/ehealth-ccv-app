@@ -6,8 +6,8 @@ const HomePage = () => {
         container: {
             marginRight: '24px',
             marginBottom: '100px',
-            maxWidth: '70vw',
-            height: '1000px',
+            maxWidth: '80vw',
+            height: 'auto',
             margin: '0.5rem auto',
             padding: '0 0.5rem',
             overflow: 'hidden' ,
@@ -57,7 +57,7 @@ const HomePage = () => {
 
     return (
         <div style={styles.container}>
-            <Card>
+
                 <div style={styles.cardContent}>
                     {/* Banner Section */}
                     <div style={styles.banner}>
@@ -139,7 +139,7 @@ const HomePage = () => {
                         <p><em>Version 1.0.0 &nbsp;|&nbsp; Last updated: May 2025</em></p>
                     </div>
                 </div>
-            </Card>
+
         </div>
     )
 }

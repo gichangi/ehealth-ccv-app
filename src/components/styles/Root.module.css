@@ -31,7 +31,6 @@ body {
     grid-area: content;
     background-color: inherit;
     padding: 5px;
-    overflow: hidden;
 }
 
 

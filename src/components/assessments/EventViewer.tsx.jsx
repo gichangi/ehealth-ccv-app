@@ -1,5 +1,4 @@
 import { useDataQuery, useDataEngine } from '@dhis2/app-runtime'
-import useDataStore from '../../hooks/useDataStore';
 import { useAlert } from '@dhis2/app-runtime';
 import {
     CircularLoader,
@@ -132,6 +131,17 @@ const EventViewer = () => {
     };
 
     const handleSave = async () => {
+        const allRequiredElementIds = sections.flatMap(section =>
+            section.dataElements.map(de => de.id)
+        )
+
+        const missing = allRequiredElementIds.filter(id => !values[id])
+
+        if (missing.length > 0) {
+            show({ message: "Please answer all required questions before saving.", options: { warning: true, duration: 2000 } });
+            return;
+        }
+
         const payload = {
             program: eventMeta?.program ?? programId,
             programStage: eventMeta?.programStage,
@@ -242,7 +252,19 @@ const EventViewer = () => {
     if (loading) {return <CircularLoader />}
     if (error) {return <NoticeBox title="Error fetching events">{error.message}</NoticeBox>}
 
+    const getSectionCompletionStatus = (section) => {
+        const total = section.dataElements.length
+        const filled = section.dataElements.filter((de) => values[de.id]).length
+        const pending = total - filled
+        return { filled, pending }
+    }
 
+    const isFormComplete = () => {
+        const allRequiredElementIds = sections.flatMap(section =>
+            section.dataElements.map(de => de.id)
+        );
+        return allRequiredElementIds.every(id => values[id]);
+    };
 
     return (
         <div style={{ fontFamily: 'Roboto, sans-serif', color: '#333',padding: '1rem', }}>
@@ -257,7 +279,7 @@ const EventViewer = () => {
 
             >
                 <h2 style={{ margin: '0 0 0.5rem', color: '#0075c9' }}>
-                    {programStage?.name || 'CCV-HFAT Event Assessment'}
+                    {programStage?.name || 'CHAT Event Assessment'}
                 </h2>
                 <p style={{ margin: '0 0 0.25rem', color: '#444' }}>
                     Review and update checklist responses for <strong>Org Unit:</strong> {currentOrgUnit?.displayName ?? 'N/A'}
@@ -275,14 +297,12 @@ const EventViewer = () => {
                     <span>Assessment Date:</span>
                     <CalendarInput
                         label=""
-                        date={formatDateString(assessmentDate || eventMeta?.eventDate)}
-                        onDateSelect={handleDateChange}
-                        inputWidth='180px'
-                        format="yyyy-MM-dd"
                         calendar="gregory"
                         locale="en-GB"
-                        maxDate={todayFormatted}
-                        pastOnly
+                        date="2025-06-06"
+                        minDate="2023-06-01"
+                        maxDate="2023-06-30"
+                        onDateSelect={handleDateChange}
                     />
                 </div>
             </div>
@@ -300,9 +320,14 @@ const EventViewer = () => {
                             borderBottom: '1px solid #e0e0e0',
                         }}
                     >
-                        <span style={{ color: '#0075c9', fontWeight: 600, textTransform: 'uppercase', fontSize: '14px' }}>
-                            {section.displayName ?? section.name} ({section.dataElements.length})
-                        </span>
+                        {(() => {
+                            const { filled, pending } = getSectionCompletionStatus(section)
+                            return (
+                                <span style={{ color: '#0075c9', fontWeight: 600, textTransform: 'uppercase', fontSize: '14px' }}>
+            {section.displayName ?? section.name} ({filled} filled, {pending} pending)
+        </span>
+                            )
+                        })()}
                         {openSections[section.id] ? <IconChevronUp24 /> : <IconChevronDown24 />}
                     </div>
 
@@ -344,40 +369,48 @@ const EventViewer = () => {
                                             {dataElement.formName || dataElement.name}
                                         </div>
 
-                                        <div
-                                            style={{
-                                                display: 'flex',
-                                                flexWrap: 'wrap',
-                                                gap: '12px',
-                                                width: '100%',
-                                                justifyContent: 'space-between',
-                                            }}
-                                        >
-                                            {options.map((option) => (
-                                                <div
-                                                    key={option.id}
-                                                    onClick={() => handleOptionSelect(de.id, option.code)}
-                                                    style={{
-                                                        flex: '0 0 calc(20% - 10px)',
-                                                        textAlign: 'center',
-                                                        padding: '12px 0',
-                                                        borderRadius: 6,
-                                                        border: '1px solid #ccc',
-                                                        backgroundColor:
-                                                            selected === option.code ? '#e1f0ff' : '#fff',
-                                                        fontWeight: 500,
-                                                        fontSize: '14px',
-                                                        color: '#222',
-                                                        cursor: 'pointer',
-                                                        boxShadow:
-                                                            selected === option.code
-                                                                ? '0 0 0 2px #1976d2 inset'
-                                                                : 'none',
-                                                    }}
-                                                >
-                                                    {option.code}
+                                        <div style={{ width: '100%' }}>
+                                            {dataElement.name?.toLowerCase().includes('collection-point-geo-codes') ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Latitude,Longitude (e.g. -1.2921,36.8219)"
+                                                        value={selected || ''}
+                                                        onChange={(e) => handleOptionSelect(de.id, e.target.value)}
+                                                        style={{
+                                                            padding: '0.75rem',
+                                                            border: '1px solid #ccc',
+                                                            borderRadius: '6px',
+                                                            fontSize: '16px',
+                                                            width: '100%',
+                                                        }}
+                                                    />
+                                                    {/* Optionally validate or preview the coordinates */}
                                                 </div>
-                                            ))}
+                                            ) : (
+                                                <div style={{ width: '100%' }}>
+                                                    <select
+                                                        value={selected || ''}
+                                                        onChange={(e) => handleOptionSelect(de.id, e.target.value)}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '0.75rem',
+                                                            fontSize: '16px',
+                                                            borderRadius: '6px',
+                                                            border: '1px solid #ccc',
+                                                        }}
+                                                    >
+                                                        <option value="" disabled>
+                                                            -- Select a score --
+                                                        </option>
+                                                        {options.map((option) => (
+                                                            <option key={option.id} value={option.code}>
+                                                                {option.code}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div style={{ marginTop: '0.75rem', textAlign: 'right' }}>
@@ -449,25 +482,26 @@ const EventViewer = () => {
                     }}
                     onClick={saveToLocalStorage} // you can link this to navigation if needed
                 >
-                    Save and Continue
+                    Save
                 </button>
 
                 {/* Save and finish later - Outlined */}
                 <button
                     style={{
-                        backgroundColor: '#fff',
-                        color: '#0075c9',
+                        backgroundColor: isFormComplete() ? '#0075c9' : '#cccccc',
+                        color: '#fff',
                         padding: '1rem',
-                        border: '1px solid #0075c9',
+                        border: 'none',
                         borderRadius: '8px',
                         fontWeight: 600,
                         fontSize: '16px',
-                        cursor: 'pointer',
+                        cursor: isFormComplete() ? 'pointer' : 'not-allowed',
                         width: '40%',
                     }}
                     onClick={handleSave}
+                    disabled={!isFormComplete()} // Disable when incomplete
                 >
-                    Save and Finish later
+                    Submit
                 </button>
             </div>
         </div>

@@ -132,9 +132,9 @@ const ProgramEventsTable = () => {
                 }}
             >
                 <div>
-                    <h2 style={{ margin: 0 }}>{existingProgram?.programStages[0]?.name ?? "CCV-HFAT Assessments"}</h2>
+                    <h2 style={{ margin: 0 }}>{existingProgram?.programStages[0]?.name ?? "CHAT Assessments"}</h2>
                     <p style={{ margin: 0, color: '#555', marginTop:'0.5rem' }}>
-                        {existingProgram?.[0]?.programStages[0]?.name ? `View, manage, and create assessments for ${existingProgram?.[0]?.programStages[0]?.name}.`:"View and manage assessments for all ccv-hfat programs."}
+                        {existingProgram?.[0]?.programStages[0]?.name ? `View, manage, and create assessments for ${existingProgram?.[0]?.programStages[0]?.name}.`:"View and manage assessments for all CHAT programs."}
                     </p>
                 </div>
                 {programId && orgUnit &&(
